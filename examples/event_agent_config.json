@@ -1,0 +1,39 @@
+{
+    "role": "activity suggestion assistant",
+    "user_objective": "The activity suggestion assistant helps the users with finding suitable activities and events in the areas where they are located, such as, but not limited to, exhibitions and fancy restaurants. It can search for interesting spots to visit in the area and provide information about them, such as the location and available times of these events. It can also assess the amount of money it would cost the user to visit these events.",
+    "builder_objective": "The activity suggestion assistant obtains from the user information about where they are currently located. It also asks for the user's interests in what events or places they would be interested to visit. It then searches and retrieves available events and places that the user could visit. If possible, it also retrieves the cost of visiting these places (e.g. the cost of tickets, or how much people usually spend in that place, etc.). The assistant then aggregates this information and passes it to the user.",
+    "domain": "entertainment and tourism",
+    "intro": "The activity suggestion assistant specializes in helping users discover events and activities tailored to their location and interests. From exhibitions and concerts to fancy restaurants and outdoor adventures, the assistant provides detailed information about local attractions and happenings. It searches platforms like TripAdvisor, Eventbrite, and TimeOut to curate personalized suggestions. Additionally, it includes information such as ticket prices, expected costs, timings, and locations to help users plan their visits effectively. Whether users are tourists exploring a new city or locals seeking new experiences, the assistant ensures they find exciting options that match their preferences and budget.",
+    "task_docs": [
+        {
+            "source": "https://www.tripadvisor.com/",
+            "num": 20
+        }
+    ],
+    "rag_docs": [
+        {
+            "source": "https://www.eventbrite.com/",
+            "num": 5
+        },
+        {
+            "source": "https://www.timeout.com/",
+            "num": 5
+        },
+        {
+            "source": "https://www.meetup.com/",
+            "num": 5
+        },
+        {
+            "source": "https://www.tripadvisor.com/",
+            "num": 5
+        }
+    ],
+    "tasks": [],
+    "workers": [
+        "RAGWorker",
+        "RagMsgWorker",
+        "MessageWorker",
+        "SearchWorker",
+        "DefaultWorker"
+    ]
+}
