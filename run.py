@@ -14,6 +14,10 @@ from agentorg.orchestrator.orchestrator import AgentOrg
 from create import API_PORT
 from agentorg.utils.model_config import MODEL
 
+from openai import OpenAI
+from pydub import AudioSegment
+from pydub.playback import play
+
 process = None  # Global reference for the FastAPI subprocess
 
 def terminate_subprocess():
@@ -62,7 +66,23 @@ def start_apis():
         )
     logger.info(f"Started FastAPI process with PID: {process.pid}")
 
+def text2speech(text):
+    # Initialize the required variables and create folders
+    client = OpenAI()
+    save_path = os.path.join("speech_tmp", "speech.mp3")
+    os.makedirs("speech_tmp", exist_ok=True)
 
+    # Convert the text into speech
+    with client.audio.speech.with_streaming_response.create(
+        model="tts-1",
+        voice="alloy",
+        input=f"""{text}""",
+    ) as response:
+        response.stream_to_file(save_path)
+
+    # Play the speech
+    audio = AudioSegment.from_file(save_path)
+    play(audio)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -91,7 +111,9 @@ if __name__ == "__main__":
     print(f"Bot: {start_message}")
     try:
         while True:
+            # TODO: insert speech-to-text here
             user_text = input("You: ")
+
             if user_text.lower() == "quit":
                 break
             start_time = time.time()
@@ -99,6 +121,10 @@ if __name__ == "__main__":
             history.append({"role": user_prefix, "content": user_text})
             history.append({"role": worker_prefix, "content": output})
             print(f"getAPIBotResponse Time: {time.time() - start_time}")
+            
+            # Print the output and play it
             print(f"Bot: {output}")
+            text2speech(output)
+            
     finally:
         terminate_subprocess()  # Ensure the subprocess is terminated
