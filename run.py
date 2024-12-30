@@ -18,6 +18,13 @@ from openai import OpenAI
 from pydub import AudioSegment
 from pydub.playback import play
 
+import openai
+import sounddevice as sd
+import numpy as np
+from scipy.io.wavfile import write
+import wave
+from pynput import keyboard
+
 process = None  # Global reference for the FastAPI subprocess
 
 def terminate_subprocess():
@@ -84,6 +91,91 @@ def text2speech(text):
     audio = AudioSegment.from_file(save_path)
     play(audio)
 
+def record_audio_with_toggle():
+    """
+    Records audio when 'r' is pressed and stops recording when 's' is pressed.
+    Saves the audio to 'output.wav'.
+    """
+    # Parameters for recording
+    sample_rate = 44100  # Sampling frequency
+    channels = 1  # Number of audio channels
+    dtype = 'int16'  # Data type for audio
+    filename = os.path.join("speech_tmp", "recorded_speech.wav")  # Output filename
+    os.makedirs("speech_tmp", exist_ok=True)
+
+    # Buffer to store audio data
+    audio_data = []
+    recording = False
+    stop_recording = False
+    print("Press 'r' to start recording and 's' to stop.")
+
+    # Event handlers
+    def on_press(key):
+        nonlocal recording, audio_data, stop_recording
+        try:
+            if key.char == 'r' and not recording:
+                print("Recording started. Press 's' to stop.")
+                recording = True
+                audio_data = []  # Reset audio buffer
+            elif key.char == 's' and recording:
+                print("Recording stopped.")
+                recording = False
+                stop_recording = True
+        except AttributeError:
+            pass  # Ignore special keys
+
+    # Start the listener
+    with keyboard.Listener(on_press=on_press) as listener:
+        while not stop_recording:  # Exit the loop when 's' is pressed
+            if recording:
+                # Capture a chunk of audio
+                chunk = sd.rec(int(sample_rate * 0.1), samplerate=sample_rate, channels=channels, dtype=dtype)
+                sd.wait()
+                audio_data.append(chunk)
+
+    # Concatenate all recorded chunks
+    audio_data = np.concatenate(audio_data, axis=0)
+
+    # Save the audio data to a WAV file
+    with wave.open(filename, 'wb') as wf:
+        wf.setnchannels(channels)
+        wf.setsampwidth(np.dtype(dtype).itemsize)
+        wf.setframerate(sample_rate)
+        wf.writeframes(audio_data.tobytes())
+
+    print(f"Audio saved to {filename}.")
+    return filename
+
+def speech2text():
+    # Record the audio
+    audio_file = record_audio_with_toggle()
+
+    # Detect text
+    text_detected = False
+    while not text_detected:
+        try:
+            client = OpenAI()
+            with open(audio_file, "rb") as audio_file_obj:
+                response = client.audio.transcriptions.create(
+                    model="whisper-1",  # Using Whisper model
+                    file=audio_file_obj
+                )
+                text = response.text
+                print(f"Recognized text: {text}")
+                os.remove(audio_file)  # Clean up temporary file
+
+                # Check if the recognized text is adequate
+                if text == '':
+                    print("Inadequate text...")
+                    text_detected = False
+                else:
+                    text_detected = True
+                    return text
+        except Exception as e:
+            print(f"Error during transcription: {e}")
+            os.remove(audio_file)  # Clean up temporary file
+            text_detected = False
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--input-dir', type=str, default="./examples/test")
@@ -95,9 +187,9 @@ if __name__ == "__main__":
     log_level = getattr(logging, args.log_level.upper(), logging.WARNING)
     logger = init_logger(log_level=log_level, filename=os.path.join(os.path.dirname(__file__), "logs", "agentorg.log"))
 
-    # Initialize NLU and Slotfill APIs
+    # Set up audio recording
     start_apis()
-        
+
     history = []
     params = {}
     config = json.load(open(os.path.join(args.input_dir, "taskgraph.json")))
@@ -109,11 +201,12 @@ if __name__ == "__main__":
             break
     history.append({"role": worker_prefix, "content": start_message})
     print(f"Bot: {start_message}")
-    text2speech(start_message)
+    # text2speech(start_message)
+
     try:
         while True:
-            # TODO: insert speech-to-text here
-            user_text = input("You: ")
+            # Record audio and convert to text using Whisper
+            user_text = speech2text()  # This line will record and convert audio to text using Whisper
 
             if user_text.lower() == "quit":
                 break
