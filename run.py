@@ -181,6 +181,7 @@ if __name__ == "__main__":
     parser.add_argument('--input-dir', type=str, default="./examples/test")
     parser.add_argument('--model', type=str, default=MODEL["model_type_or_path"])
     parser.add_argument('--log-level', type=str, default="WARNING", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"])
+    parser.add_argument('--sound', action='store_true', help="Enable sound (default is disabled)")
     args = parser.parse_args()
     os.environ["DATA_DIR"] = args.input_dir
     MODEL["model_type_or_path"] = args.model
@@ -201,12 +202,16 @@ if __name__ == "__main__":
             break
     history.append({"role": worker_prefix, "content": start_message})
     print(f"Bot: {start_message}")
-    text2speech(start_message)
+    if args.sound:
+        text2speech(start_message)
 
     try:
         while True:
             # Record audio and convert to text using Whisper
-            user_text = speech2text()  # This line will record and convert audio to text using Whisper
+            if args.sound:
+                user_text = speech2text()  # This line will record and convert audio to text using Whisper
+            else:
+                user_text = input("You: ")
 
             if user_text.lower() == "quit":
                 break
