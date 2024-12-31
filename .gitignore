@@ -42,3 +42,7 @@ Thumbs.db
 .bashrc
 .env
 temp_files
+
+# Temporary storage for sound files #
+######################
+speech_tmp

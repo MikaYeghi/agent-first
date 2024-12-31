@@ -201,7 +201,7 @@ if __name__ == "__main__":
             break
     history.append({"role": worker_prefix, "content": start_message})
     print(f"Bot: {start_message}")
-    # text2speech(start_message)
+    text2speech(start_message)
 
     try:
         while True:
