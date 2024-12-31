@@ -1,0 +1,13 @@
+{
+    "role": "agent creator",
+    "user_objective": "The agent creator helps the users create AI agents using ArticulateAI's Agent First framework. The user provides information about the type of AI agent they want, and the agent creator composes a config file that would allow to build the agent.",
+    "builder_objective": "The agent creator requests the necessary information to understand multiple aspects about the agent that needs to be build. It includes: the role of the agent, that agent's potential users' objectives, the objectives for the builder that will be building that agent, the domain of that agent, relevant documents for constructing the tasks of that agents, as well as relevant documents for retrieval augmented generation by that agent. Additionally, the agent creator concludes what type of workers (e.g. a message worker, a RAG worker, a database worker, etc.) will be needed for the newborn agent.",
+    "domain": "AI agent creation/production",
+    "intro": "",
+    "docs": [],
+    "tasks": [],
+    "workers": [
+        "MessageWorker",
+        "ConfigWriterWorker"
+    ]
+}

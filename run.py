@@ -223,7 +223,8 @@ if __name__ == "__main__":
             
             # Print the output and play it
             print(f"Bot: {output}")
-            text2speech(output)
+            if args.sound:
+                text2speech(output)
             
     finally:
         terminate_subprocess()  # Ensure the subprocess is terminated
